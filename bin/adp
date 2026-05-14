@@ -20,6 +20,7 @@ run_pkg_script() {
     PKG="$1"
     SCRIPT="$2"
 
+    rm -rf "$PKG_TMP"
     PKG_TMP="$TMP/$PKG"
 
     rm -rf "$PKG_TMP"
