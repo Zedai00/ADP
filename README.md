@@ -1,2 +1,0 @@
-# ADP
-ADB Package Manager
