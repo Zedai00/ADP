@@ -1,0 +1,191 @@
+#!/system/bin/sh
+
+REPO_URL="https://raw.githubusercontent.com/Zedai00/adp-repo/main/pkgs"
+TMP="/data/local/tmp/adp"
+ADP_ROOT="/data/adb/modules/adp"
+KSU_BIN="/data/adb/ksu/bin"
+ADP_BIN="$ADP_ROOT/bin"
+
+mkdir -p "$TMP"
+
+download() {
+    URL="$1"
+    OUTPUT="$2"
+
+    busybox wget "$URL" -O "$OUTPUT"
+}
+
+run_pkg_script() {
+    PKG="$1"
+    SCRIPT="$2"
+
+    PKG_TMP="$TMP/$PKG"
+
+    rm -rf "$PKG_TMP"
+    mkdir -p "$PKG_TMP"
+
+    export PKG_TMP
+    export ADP_TMP="$TMP"
+    export ADP_ROOT="/data/adb/modules/adp"
+    export KSU_BIN="/data/adb/ksu/bin"
+    export ADP_BIN="$ADP_ROOT/bin"
+
+    echo "[+] Fetching $PKG/$SCRIPT"
+
+    download \
+        "$REPO_URL/$PKG/$SCRIPT" \
+        "$PKG_TMP/$SCRIPT" || {
+        echo "[-] Failed to download package script"
+        return 1
+    }
+
+    chmod 755 "$PKG_TMP/$SCRIPT"
+
+    (
+        cd "$PKG_TMP" || exit 1
+        . "./$SCRIPT"
+    )
+
+    rm -rf "$PKG_TMP"
+}
+install_pkg() {
+    echo "[+] Installing $1"
+    run_pkg_script "$1" "install.sh"
+}
+
+remove_pkg() {
+    echo "[+] Removing $1"
+    run_pkg_script "$1" "uninstall.sh"
+}
+
+self_update() {
+    REMOTE_SHA="$1"
+
+    UPDATE_URL="https://raw.githubusercontent.com/Zedai00/ADP/main/system/bin/adp"
+
+    TARGET="$ADP_BIN/adp"
+    LINK="$KSU_BIN/adp"
+
+    SHA_FILE="$ADP_ROOT/main.sha"
+
+    mkdir -p $ADP_ROOT
+    mkdir -p $ADP_BIN
+    mkdir -p $KSU_BIN
+
+    echo "[+] Downloading latest adp"
+
+    download \
+        "$UPDATE_URL" \
+        "$TMP/adp.new" || {
+        echo "[-] Download failed"
+        return 1
+    }
+
+    chmod 755 "$TMP/adp.new"
+
+    echo "[+] Installing update"
+
+    cp "$TMP/adp.new" "$TARGET" || {
+        echo "[-] Failed to install update"
+        return 1
+    }
+
+    chmod 755 "$TARGET"
+
+    ln -sf "$TARGET" "$LINK" || {
+        echo "[-] Failed to create symlink"
+        return 1
+    }
+
+    echo "$REMOTE_SHA" > "$SHA_FILE"
+
+    echo "[+] adp updated successfully"
+}
+
+check_update() {
+    SHA_FILE="/data/adb/adp/main.sha"
+
+    FEED="$TMP/main.atom"
+
+    echo "[+] Checking for updates"
+
+    download \
+        "https://github.com/Zedai00/ADP/commits/main.atom" \
+        "$FEED" || {
+        echo "[-] Failed to fetch update feed"
+        return 1
+    }
+
+    REMOTE_SHA=$(
+        grep 'Grit::Commit/' "$FEED" |
+        head -n1 |
+        sed 's/.*Commit\///;s/<\/id>.*//'
+    )
+
+    [ -z "$REMOTE_SHA" ] && {
+        echo "[-] Failed to parse remote SHA"
+        return 1
+    }
+
+    if [ ! -f "$SHA_FILE" ]; then
+        echo "[+] No local update state found"
+        echo "[+] Performing initial sync"
+
+        self_update "$REMOTE_SHA"
+        return
+    fi
+
+    LOCAL_SHA=$(cat "$SHA_FILE")
+
+    if [ "$REMOTE_SHA" != "$LOCAL_SHA" ]; then
+        echo "[+] Update available"
+        echo "[+] Local : ${LOCAL_SHA:0:7}"
+        echo "[+] Remote: ${REMOTE_SHA:0:7}"
+
+        self_update "$REMOTE_SHA"
+        return
+    fi
+
+    echo "[+] Already at latest commit"
+}
+
+main() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            i|install)
+                shift
+
+                [ -z "$1" ] && {
+                    echo "Usage: adp install <package>"
+                    exit 1
+                }
+
+                install_pkg "$1"
+                ;;
+
+            r|remove)
+                shift
+
+                [ -z "$1" ] && {
+                    echo "Usage: adp remove <package>"
+                    exit 1
+                }
+
+                remove_pkg "$1"
+                ;;
+
+            u|update)
+                check_update
+                ;;
+
+            *)
+                echo "Unknown command: $1"
+                exit 1
+                ;;
+        esac
+
+        shift
+    done
+}
+
+main "$@"
