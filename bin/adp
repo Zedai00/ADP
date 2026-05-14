@@ -1,6 +1,7 @@
 #!/system/bin/sh
 
 REPO_URL="https://raw.githubusercontent.com/Zedai00/adp-repo/main/pkgs"
+UPDATE_URL="https://raw.githubusercontent.com/Zedai00/ADP/main/bin/adp"
 TMP="/data/local/tmp/adp"
 ADP_ROOT="/data/adb/modules/adp"
 KSU_BIN="/data/adb/ksu/bin"
@@ -61,7 +62,6 @@ remove_pkg() {
 self_update() {
     REMOTE_SHA="$1"
 
-    UPDATE_URL="https://raw.githubusercontent.com/Zedai00/ADP/main/system/bin/adp"
 
     TARGET="$ADP_BIN/adp"
     LINK="$KSU_BIN/adp"
