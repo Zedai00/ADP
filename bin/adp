@@ -103,7 +103,7 @@ self_update() {
 }
 
 check_update() {
-    SHA_FILE="/data/adb/adp/main.sha"
+    SHA_FILE="$ADP_ROOT/main.sha"
 
     FEED="$TMP/main.atom"
 
