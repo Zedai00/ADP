@@ -6,6 +6,7 @@ TMP="/data/local/tmp/adp"
 mkdir -p "$TMP"
 
 run_pkg_script() {
+    
     PKG="$1"
     SCRIPT="$2"
 
