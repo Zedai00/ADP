@@ -63,7 +63,7 @@ self_update() {
     REMOTE_SHA="$1"
 
 
-    TARGET="$ADP_BIN/adp"
+    TARGET="$ADP_BIN/bin"
     LINK="$KSU_BIN/adp"
 
     SHA_FILE="$ADP_ROOT/main.sha"
@@ -85,7 +85,7 @@ self_update() {
 
     echo "[+] Installing update"
 
-    cp "$TMP/adp.new" "$TARGET" || {
+    cp "$TMP/adp.new" "$TARGET/adp" || {
         echo "[-] Failed to install update"
         return 1
     }
@@ -148,7 +148,24 @@ check_update() {
     echo "[+] Already at latest commit"
 }
 
+help() {
+    echo "ADP - ADB Package Manager"
+    echo
+    echo "Usage:"
+    echo "  adp <command> [package]"
+    echo
+    echo "Commands:"
+    echo "  i, install <pkg>    Install package"
+    echo "  r, remove  <pkg>    Remove package"
+    echo "  u, update           Update adp"
+    echo "  h, help             Show this help message"
+}
+
 main() {
+    [ $# -eq 0 ] && {
+        help
+        exit 0
+    }
     while [ $# -gt 0 ]; do
         case "$1" in
             i|install)
@@ -176,7 +193,9 @@ main() {
             u|update)
                 check_update
                 ;;
-
+            h|help)
+                help
+                ;;
             *)
                 echo "Unknown command: $1"
                 exit 1
