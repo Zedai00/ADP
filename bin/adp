@@ -63,7 +63,7 @@ self_update() {
     REMOTE_SHA="$1"
 
 
-    TARGET="$ADP_BIN/bin"
+    TARGET="$ADP_BIN"
     LINK="$KSU_BIN/adp"
 
     SHA_FILE="$ADP_ROOT/main.sha"
@@ -92,7 +92,7 @@ self_update() {
 
     chmod 755 "$TARGET"
 
-    ln -sf "$TARGET" "$LINK" || {
+    ln -sf "$TARGET/adp" "$LINK" || {
         echo "[-] Failed to create symlink"
         return 1
     }
