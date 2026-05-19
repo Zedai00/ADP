@@ -160,6 +160,17 @@ help() {
     echo "  u, update           Update adp"
     echo "  h, help             Show this help message"
 }
+version() {
+    SHA_FILE="$ADP_ROOT/main.sha"
+
+    if [ ! -f "$SHA_FILE" ]; then
+    echo "adp unknown"
+    return 1
+    fi
+
+    SHA=$(cut "$SHA_FILE" -c1-7)
+    echo "adp $SHA"
+}
 
 main() {
     [ $# -eq 0 ] && {
@@ -199,6 +210,9 @@ main() {
                 fi
                 check_update
                 exit $?
+                ;;
+            v|version)
+                version
                 ;;
             h|help)
                 help
