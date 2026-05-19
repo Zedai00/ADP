@@ -193,6 +193,10 @@ main() {
                 ;;
 
             u|update)
+                shift
+                if [ "$1" = "--force" ] || [ "$1" = "-f" ]; then
+                    rm -f "$ADP_ROOT/main.sha"
+                fi
                 check_update
                 exit $?
                 ;;
