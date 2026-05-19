@@ -177,6 +177,7 @@ main() {
                 }
 
                 install_pkg "$1"
+                exit $?
                 ;;
 
             r|remove)
@@ -188,13 +189,16 @@ main() {
                 }
 
                 remove_pkg "$1"
+                exit $?
                 ;;
 
             u|update)
                 check_update
+                exit $?
                 ;;
             h|help)
                 help
+                exit $?
                 ;;
             *)
                 echo "Unknown command: $1"
